@@ -55,32 +55,42 @@
 
     Overall, our methods combined data engineering, spatial analytics, and statistical modeling to draw meaningful comparisons between housing and education equity in Seattle and Charlotte. The diverse data landscape for Seattle required extensive preparation, cleaning, and validation to ensure replicability of the original Urban Institute methodology.</p>
     <h3>Data Sources</h3>
-    <ul>
-      <li>
-      <li>Seattle Public Schools Enrollment Data</li>
-      <li>Seattle Schools Location Shapefiles</li>
-      <li>Charlotte Housing and Demographics Data</li>
-      <li>Census Tract Shapefiles</li>
-      <li>Seattle Rent Data</li>
-    </ul>
+    <ul>Seattle:
+      
+      <li>Seattle Public Schools Enrollment Data (2022)</li>
+      <li>Seattle Schools Geographic Shapefiles</li>
+      <li>Census Tract Demographics (ACS 2021 5-Year Estimates)</li>
+      <li>Seattle Rental Cost Data (2021 ACS)</li>
+      
+    </ul>Charlotte: 
+      
+      <li>Charlotte-Mecklenburg Public School Data (provided by Urban Institute)<li>
+      <li>Charlotte Neighborhood-Level Rent and Demographics<li>
+      <li>Public Housing Locations</li>
+      <li>Census Tract SHapefiles</li>
+      
 
     <h3>Data Cleaning and Preparation</h3>
     <ul>
-      <li>Fuzzily matched Seattle school names between datasets using approximate string matching.</li>
-      <li>Created a ‘Neighborhood’ column manually for Seattle schools.</li>
-      <li>Merged census tract shapefiles with demographic and rent data by ‘GEOID’.</li>
+      <li>Manually cleaned and merged Seattle datasets across enrollment, location, and neighborhood data.</li>
+      <li>Created a ‘Neighborhood’ column for Seattle schools by joining spatial coordinates with tract-level shapefiles.</li>
       <li>Recreated Charlotte visualizations from provided datasets.</li>
-      <li>Created new variables: % Students of Color, Median Rent</li>
-      <li>Standardized measures across cities for comparability.</li>
+      <li>Standardized measures across cities for comparability:
+          <li>Percent Students of Color</li>
+          <li>Median Rent</li>
+      <li>Fuzzily matched Seattle school names between datasets using approximate string matching (via stringdist package).</li>
+      <li>Merged census tract shapefiles with demographic and rent data by ‘GEOID’.</li>
     </ul>
 
-    <h3>Statistical and Mapping Methods</h3>
+    <h3>Statistical and Spatial Mapping Methods</h3>
     <ul>
-      <li>Histograms of racial diversity across schools.</li>
-      <li>Scatterplots of Median Rent vs % Students of Color.</li>
-      <li>Choropleth maps showing: Residents of color (%), Median Rent, Public Housing Distribution</li>
-      <li>Spatial joins in R using ‘sf’ and ‘dplyr’</li>
-      <li>Mapping tools used: ‘tmap’, ‘ggplot2’, and ‘leaflet’</li>
+      <li>Created chloropleth maps for both cities showing:
+          <li>Percent Residents of Color</li>
+          <li>Median Rent Levels</li>
+          <li>Public Housing Distribution (Charlotte only)</li>
+      <li>Created Scatterplots of % Students of Color vs. Median Rent.</li>
+      <li>Performed spatial joins in R using ‘sf’, ‘dplyr’, and 'tigris' packages</li>
+      <li>Visualizations & mapping tools used: ‘tmap’, ‘ggplot2’, and ‘leaflet’</li>
     </ul>
   </section>
 
