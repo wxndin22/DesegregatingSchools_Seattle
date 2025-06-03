@@ -1,0 +1,314 @@
+---
+title: "Sea_maps_clean"
+output: html_document
+date: "2025-06-03"
+---
+
+
+```{r}
+library(tidyverse)
+library(plotly)
+library(scales)
+library(readr)
+library(tidyverse)
+library(fuzzyjoin)
+library(stringr)
+library(ggnewscale)
+library(tidycensus)
+library(viridis)
+library(sf)
+library(NatParksPalettes)
+```
+
+```{r}
+seattle_es <- read_sf("sps_attendance_area_ES_2025_2026.shp")
+seattle_ms <- read_sf("sps_attendance_area_MS_2025_2026.shp")
+seattle_hs <- read_sf("sps_attendance_area_HS_2025_2026.shp")
+seattle_tract_race <- read_csv("TractData_23ACS_race.csv")
+seattle_tract_rent <- read_csv("TractData_23ACS_rent.csv")
+seattle_tract_income <- read_csv("TractData_23ACS_HHInc.csv")
+seattle_tract_pov <- read_csv("TractData_23ACS_pov.csv")
+seattle_tract_pov <- seattle_tract_pov |>
+  mutate(pov_rate = below200pct/PopPov)
+seattle_tract_own <- read_csv("TractData_23ACS_own.csv")
+WA_schools <- read_csv("Report_Card_Enrollment_2023-24.csv")
+```
+
+```{r}
+Seattle_all_data <- WA_schools |>
+  filter(DistrictName == "Seattle School District No. 1") |>
+  na.omit(SchoolCode)
+non_school_names = c("Private School Services", "Interagency Detention School", "Interagency Open Doors", "Interagency Programs")
+Seattle_data <- Seattle_all_data |>
+  arrange(SchoolName) |>
+  filter(!SchoolName %in% non_school_names) |>
+  select(!c(DistrictName, DistrictCode, ESDName, ESDOrganizationID, OrganizationLevel, County, DistrictOrganizationId, `Non-Foster Care`))
+unique(Seattle_data$`Non-Foster Care`)
+Seattle_by_school <- Seattle_data |>
+  filter(GradeLevel == "All Grades") |>
+  mutate(school_name_clean = str_to_lower(str_trim(SchoolName)))
+seattle_school_names <- Seattle_by_school |>
+  select(school_name_clean, SchoolName)
+Seattle_by_school$school_name_clean[Seattle_by_school$school_name_clean=="dearborn park international school"]<-"dearborn park int'l"
+Seattle_by_school$school_name_clean[Seattle_by_school$school_name_clean=="b f day elementary school"]<-"b.f. day"
+Seattle_by_school$school_name_clean[Seattle_by_school$school_name_clean=="concord international school"]<-"concord int'l"
+Seattle_by_school$school_name_clean[Seattle_by_school$school_name_clean=="martin luther king jr. elementary school"]<-"mlk jr."
+Seattle_by_school$school_name_clean[Seattle_by_school$school_name_clean=="beacon hill international school"]<-"beacon hill int'l"
+```
+
+```{r}
+Seattle_school_pop <- Seattle_by_school |>
+  mutate(Students_of_color = rowSums(across(c(`American Indian/ Alaskan Native`, Asian, `Black/ African American`, `Hispanic/ Latino of any race(s)`, `Native Hawaiian/ Other Pacific Islander`, `Two or More Races`)))/`All Students`) |>
+  mutate(Native_American_pop = `American Indian/ Alaskan Native`/`All Students`) |>
+  mutate(Asian_pop = Asian/`All Students`) |>
+  mutate(Black_pop = `Black/ African American`/`All Students`) |>
+  mutate(Latino_pop = `Hispanic/ Latino of any race(s)`/`All Students`) |>
+  mutate(Hawaiin_pop = `Native Hawaiian/ Other Pacific Islander`/`All Students`) |>
+  mutate(Two_pop = `Two or More Races`/`All Students`) |>
+  mutate(White_pop = White/`All Students`)
+```
+
+
+```{r}
+seattle_es_clean <- seattle_es |>
+  mutate(school_name_clean = str_to_lower(str_trim(es_zone)))
+
+seattle_es_clean_names <- as.data.frame(seattle_es_clean$school_name_clean)
+colnames(seattle_es_clean_names) <- "school_name_clean"
+fuzzy_es <- Seattle_school_pop |>
+  regex_left_join(
+    seattle_es_clean_names,
+     by = "school_name_clean"
+  ) |>
+  select(-school_name_clean.x, -GradeLevel)
+colnames(fuzzy_es)[21] <- "school_name_clean"
+fuzzy_matched_es <- seattle_es_clean |>
+  regex_left_join(
+    fuzzy_es,
+     by = "school_name_clean"
+  )
+```
+
+```{r}
+seattle_ms_clean <- seattle_ms |>
+  mutate(school_name_clean = str_to_lower(str_trim(ms_zone)))
+
+seattle_ms_clean_names <- as.data.frame(seattle_ms_clean$school_name_clean)
+colnames(seattle_ms_clean_names) <- "school_name_clean"
+fuzzy_ms <- Seattle_school_pop |>
+  regex_left_join(
+    seattle_ms_clean_names,
+     by = "school_name_clean"
+  ) |>
+  select(-school_name_clean.x, -GradeLevel)
+colnames(fuzzy_ms)[21] <- "school_name_clean"
+fuzzy_matched_ms <- seattle_ms_clean |>
+  regex_left_join(
+    fuzzy_ms,
+     by = "school_name_clean"
+  )
+```
+
+```{r}
+seattle_hs_clean <- seattle_hs |>
+  mutate(school_name_clean = str_to_lower(str_trim(HS_ZONE)))
+
+seattle_hs_clean_names <- as.data.frame(seattle_hs_clean$school_name_clean)
+colnames(seattle_hs_clean_names) <- "school_name_clean"
+fuzzy_hs <- Seattle_school_pop |>
+  regex_left_join(
+    seattle_hs_clean_names,
+     by = "school_name_clean"
+  ) |>
+  select(-school_name_clean.x, -GradeLevel)
+colnames(fuzzy_hs)[21] <- "school_name_clean"
+fuzzy_matched_hs <- seattle_hs_clean |>
+  regex_left_join(
+    fuzzy_hs,
+     by = "school_name_clean"
+  )
+```
+
+```{r}
+#Seattle Public Schools elementary school boundary maps
+ggplot() +
+  geom_sf(data = fuzzy_matched_es, aes(fill= Students_of_color), color="gray20", alpha = 0.9) +
+  my_map_theme() +
+  labs(fill = "Proportion of Students of Color") +
+  scale_fill_gradientn(colors = Acadia, limits = c(0,1))+
+  ggnewscale::new_scale_fill() +
+  geom_sf(data = seattle_tract_race3, aes(fill= PoC_prop), color="gray40", alpha = 0.4) +
+  scale_fill_gradientn(colors = kipp, limits = c(0,1))+
+  labs(fill = "Proportion of People of Color\nin Seattle Census Tracts") +
+  theme(legend.key.size = unit(1, 'cm'), #change legend key size
+        legend.key.height = unit(1, 'cm'), #change legend key height
+        legend.key.width = unit(1, 'cm'), #change legend key width
+        legend.title = element_text(size=14), #change legend title font size
+        legend.text = element_text(size=10),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.box = "horizontal") #change legend text font size
+
+ggplot() +
+  geom_sf(data = fuzzy_matched_es, aes(fill= Students_of_color), color="gray20", alpha = 0.9) +
+  my_map_theme() +
+  labs(fill = "Proportion of Students of Color") +
+  scale_fill_gradientn(colors = Acadia, limits = c(0,1))+
+  ggnewscale::new_scale_fill() +
+  geom_sf(data = seattle_tract_houses2, aes(fill= Rent_prop), color="gray40", alpha = 0.4) +
+  scale_fill_gradientn(colors = kipp, limits = c(0,1))+
+  labs(fill = "Proportion of Rent Households per Tract") +
+  theme(legend.key.size = unit(1, 'cm'), #change legend key size
+        legend.key.height = unit(1, 'cm'), #change legend key height
+        legend.key.width = unit(1, 'cm'), #change legend key width
+        legend.title = element_text(size=14), #change legend title font size
+        legend.text = element_text(size=10),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.box = "horizontal") #change legend text font size
+
+ggplot() +
+  geom_sf(data = fuzzy_matched_es, aes(fill= Students_of_color), color="gray20", alpha = 0.9) +
+  my_map_theme() +
+  labs(fill = "Proportion of Students of Color") +
+  scale_fill_gradientn(colors = Acadia, limits = c(0,1))+
+  ggnewscale::new_scale_fill() +
+  geom_sf(data = seattle_tract_income2, aes(fill= MedHHinc), color="gray40", alpha = 0.4) +
+  scale_fill_gradientn(colors = kipp)+
+  labs(fill = "Median household income per tract") +
+  theme(legend.key.size = unit(1, 'cm'), #change legend key size
+        legend.key.height = unit(1, 'cm'), #change legend key height
+        legend.key.width = unit(1, 'cm'), #change legend key width
+        legend.title = element_text(size=14), #change legend title font size
+        legend.text = element_text(size=10),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.box = "horizontal") #change legend text font size
+ggplot() +
+  geom_sf(data = fuzzy_matched_es, aes(fill= Students_of_color), color="gray20", alpha = 0.9) +
+  my_map_theme() +
+  labs(fill = "Proportion of Students of Color") +
+  scale_fill_gradientn(colors = Acadia, limits = c(0,1))+
+  ggnewscale::new_scale_fill() +
+  geom_sf(data = seattle_tract_pov2, aes(fill= pov_rate), color="gray40", alpha = 0.4) +
+  scale_fill_gradientn(colors = kipp)+
+  labs(fill = "Population living below 200% federal poverty level per tract") +
+  theme(legend.key.size = unit(1, 'cm'), #change legend key size
+        legend.key.height = unit(1, 'cm'), #change legend key height
+        legend.key.width = unit(1, 'cm'), #change legend key width
+        legend.title = element_text(size=14), #change legend title font size
+        legend.text = element_text(size=10),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.box = "horizontal") #change legend text font size
+```
+
+```{r}
+#Seattle Public Schools middle school boundary maps
+ggplot() +
+  geom_sf(data = fuzzy_matched_ms, aes(fill= Students_of_color), color="gray20", alpha = 0.9) +
+  my_map_theme() +
+  labs(fill = "Proportion of Students of Color") +
+  scale_fill_gradientn(colors = Acadia, limits = c(0,1))+
+  ggnewscale::new_scale_fill() +
+  geom_sf(data = seattle_tract_race3, aes(fill= PoC_prop), color="gray40", alpha = 0.4) +
+  scale_fill_gradientn(colors = kipp, limits = c(0,1))+
+  labs(fill = "Proportion of People of Color\nin Seattle Census Tracts") +
+  theme(legend.key.size = unit(1, 'cm'), #change legend key size
+        legend.key.height = unit(1, 'cm'), #change legend key height
+        legend.key.width = unit(1, 'cm'), #change legend key width
+        legend.title = element_text(size=14), #change legend title font size
+        legend.text = element_text(size=10),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.box = "horizontal") #change legend text font size
+
+ggplot() +
+  geom_sf(data = fuzzy_matched_ms, aes(fill= Students_of_color), color="gray20", alpha = 0.9) +
+  my_map_theme() +
+  labs(fill = "Proportion of Students of Color") +
+  scale_fill_gradientn(colors = Acadia, limits = c(0,1))+
+  ggnewscale::new_scale_fill() +
+  geom_sf(data = seattle_tract_houses2, aes(fill= Rent_prop), color="gray40", alpha = 0.4) +
+  scale_fill_gradientn(colors = kipp, limits = c(0,1))+
+  labs(fill = "Proportion of Rent Households per Tract") +
+  theme(legend.key.size = unit(1, 'cm'), #change legend key size
+        legend.key.height = unit(1, 'cm'), #change legend key height
+        legend.key.width = unit(1, 'cm'), #change legend key width
+        legend.title = element_text(size=14), #change legend title font size
+        legend.text = element_text(size=10),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.box = "horizontal") #change legend text font size
+
+ggplot() +
+  geom_sf(data = fuzzy_matched_ms, aes(fill= Students_of_color), color="gray20", alpha = 0.9) +
+  my_map_theme() +
+  labs(fill = "Proportion of Students of Color") +
+  scale_fill_gradientn(colors = Acadia, limits = c(0,1))+
+  ggnewscale::new_scale_fill() +
+  geom_sf(data = seattle_tract_income2, aes(fill= MedHHinc), color="gray40", alpha = 0.4) +
+  scale_fill_gradientn(colors = kipp)+
+  labs(fill = "Median household income per tract") +
+  theme(legend.key.size = unit(1, 'cm'), #change legend key size
+        legend.key.height = unit(1, 'cm'), #change legend key height
+        legend.key.width = unit(1, 'cm'), #change legend key width
+        legend.title = element_text(size=14), #change legend title font size
+        legend.text = element_text(size=10),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.box = "horizontal") #change legend text font size
+ggplot() +
+  geom_sf(data = fuzzy_matched_ms, aes(fill= Students_of_color), color="gray20", alpha = 0.9) +
+  my_map_theme() +
+  labs(fill = "Proportion of Students of Color") +
+  scale_fill_gradientn(colors = Acadia, limits = c(0,1))+
+  ggnewscale::new_scale_fill() +
+  geom_sf(data = seattle_tract_pov2, aes(fill= pov_rate), color="gray40", alpha = 0.4) +
+  scale_fill_gradientn(colors = kipp)+
+  labs(fill = "Population living below 200% federal poverty level per tract") +
+  theme(legend.key.size = unit(1, 'cm'), #change legend key size
+        legend.key.height = unit(1, 'cm'), #change legend key height
+        legend.key.width = unit(1, 'cm'), #change legend key width
+        legend.title = element_text(size=14), #change legend title font size
+        legend.text = element_text(size=10),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.box = "horizontal") #change legend text font size
+```
+
+```{r}
+#Legend
+
+color_df <- data.frame(x = double(100), y = double(100))
+row_index <- 1
+for (x in 1:10){ 
+      for (y in 1:10) 
+    { 
+        color_df[row_index, ] <- c(x, y)
+        row_index <- row_index + 1
+    } 
+}
+
+kipp <- c("#8B174DFF", "#AE2565FF", "#C1447EFF", "#D06C9BFF", "#DA9FB8FF", "#D9D2CCFF", "#ADBE7CFF", "#8BA749FF", "#6E8537FF", "#4F5F28FF", "#343D1FFF")
+Acadia <- natparks.pals("Acadia", n=15, type = "continuous", direction = -1)
+
+ggplot() +
+  geom_point(data=color_df, aes(x=x, y=y, color=x), alpha = 0.9, size = 15, shape = 15)+
+  scale_color_gradientn(colors = Acadia)+
+  theme(
+    legend.position = "bottom",
+    legend.direction = "horizontal",
+    legend.box = "horizontal"
+  )+
+  ggnewscale::new_scale_color() +
+  geom_point(data=color_df, aes(x=x, y=y, color=y), alpha = 0.4, size = 15, shape = 15)+
+  scale_color_gradientn(colors = kipp)+
+  theme(legend.key.size = unit(1, 'cm'), #change legend key size
+        legend.key.height = unit(1, 'cm'), #change legend key height
+        legend.key.width = unit(1, 'cm'), #change legend key width
+        legend.title = element_text(size=14), #change legend title font size
+        legend.text = element_text(size=10)) #change legend text font size
+```
+
+
