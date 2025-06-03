@@ -1,1 +1,260 @@
+# Load Libraries
+library(shiny)
+library(tidyverse)
+library(plotly)
+library(scales)
+library(readr)
+library(fuzzyjoin)
+library(viridis)
+
+# Load and clean enrollment data
+enrollment <- read_csv("ReportCardEnrollment.csv")
+
+enrollment_clean <- enrollment |>
+  filter(
+    DistrictName == "Seattle School District No. 1",
+    GradeLevel == "All Grades",
+    !is.na(SchoolName),
+    SchoolName != "District Total"
+  ) |>
+  filter(!str_trim(SchoolName) %in% c(
+    "Cascade Parent Partnership Program",
+    "Interagency Programs",
+    "Interagency Detention School",
+    "Interagency Open Doors",
+    "Orca K-8 School",
+    "South Shore PK-8 School",
+    "Tops K-8 School"
+  )) |>
+  mutate(SchoolName = case_when(
+    SchoolName == "David T. Denny International Middle School" ~ "Denny Int'l",
+    SchoolName == "Edmonds S. Meany Middle School" ~ "Meany",
+    TRUE ~ SchoolName
+  )) |>
+  mutate(
+    school_name_clean = str_to_lower(str_trim(SchoolName)),
+    scl_pct_students_of_color = 100 - (White / `All Students` * 100),
+    pct_asian = `Asian` / `All Students` * 100,
+    pct_black = `Black/ African American` / `All Students` * 100,
+    pct_hispanic = `Hispanic/ Latino of any race(s)` / `All Students` * 100,
+    pct_multiracial = `Two or More Races` / `All Students` * 100,
+    pct_native = `American Indian/ Alaskan Native` / `All Students` * 100,
+    pct_pacific = `Native Hawaiian/ Other Pacific Islander` / `All Students` * 100,
+    pct_white = `White` / `All Students` * 100,
+    pct_ell = `English Language Learners` / `All Students` * 100,
+    pct_low_income = `Low-Income` / `All Students` * 100,
+    pct_disabilities = `Students with Disabilities` / `All Students` * 100,
+    pct_hcapable = `Highly Capable` / `All Students` * 100
+  )
+
+tracts <- read_csv("joined_tracts1.csv") |>
+  mutate(school_name_clean = str_to_lower(str_trim(school_name)))
+
+enrollment_with_tracts <- enrollment_clean |>
+  stringdist_left_join(tracts, by = "school_name_clean", method = "jw", max_dist = 0.4, distance_col = "dist") |>
+  group_by(SchoolName) |>
+  arrange(dist) |>
+  slice(1) |>
+  ungroup()
+
+
+# UI
+ui <- navbarPage(
+  "Segregation & Equity in Public Schools",
+  tabPanel("Overview / Plot",
+           sidebarLayout(
+             sidebarPanel(
+               selectInput("city", "Select City Dataset:", choices = c("Seattle", "Charlotte")),
+               conditionalPanel(
+                 condition = "input.city == 'Seattle'",
+                 selectInput("x_var", "X-Axis (Tract Level):", choices = c(
+                   "% People of Color in Tract" = "PoC_prop",
+                   "% Renter Households" = "rent_prop",
+                   "Mean Household Income" = "mean_HHInc",
+                   "Poverty Rate" = "pov_rate"
+                 )),
+                 selectInput("y_var", "Y-Axis (School Demographics):", choices = c(
+                   "% Students of Color" = "scl_pct_students_of_color",
+                   "% Asian" = "pct_asian",
+                   "% Black" = "pct_black",
+                   "% Hispanic" = "pct_hispanic",
+                   "% Multiracial" = "pct_multiracial",
+                   "% Native American" = "pct_native",
+                   "% Pacific Islander" = "pct_pacific",
+                   "% White" = "pct_white"
+                 )),
+                 selectInput("color_var", "Color By:", choices = c(
+                   "Same as X-Axis" = "x",
+                   "% Highly Capable" = "pct_hcapable",
+                   "% Low-Income" = "pct_low_income",
+                   "% ELL" = "pct_ell",
+                   "% Disabilities" = "pct_disabilities"
+                 ))
+               ),
+               conditionalPanel(
+                 condition = "input.city == 'Charlotte'",
+                 selectInput("char_x_var", "X-Axis:", choices = c(
+                   "% Students of Color" = "scl_pct_nonwhite",
+                   "% White" = "share_white",
+                   "% Black" = "share_black",
+                   "% Hispanic" = "share_hisp",
+                   "% Asian" = "share_asian",
+                   "% Other" = "share_other"
+                 )),
+                 selectInput("char_color_var", "Color By:", choices = c(
+                   "Same as X-Axis" = "x",
+                   "% Free/Reduced Lunch" = "share_frl_eligible",
+                   "Student-Teacher Ratio" = "student_teacher_ratio"
+                 ))
+               )
+             ),
+             mainPanel(plotlyOutput("equityPlot"))
+           )
+  ),
+  tabPanel("Seattle Map", fluidRow(column(12, h4("Seattle Map Placeholder"), p("Map for Seattle will go here.")))),
+  tabPanel("Charlotte Map", fluidRow(column(12, h4("Charlotte Map Placeholder"), p("Map for Charlotte will go here."))))
+)
+
+# Server
+server <- function(input, output, session) {
+  char_data <- reactive({
+    school_data <- read_csv("schools_level_data (1).csv")
+    school_race <- read_csv("school_race_data (1).csv")
+    school_data |> left_join(school_race, by = "ncessch") |>
+      mutate(scl_pct_nonwhite = 100 - share_white)
+  })
+  
+  output$equityPlot <- renderPlotly({
+    # label lookup for Charlotte
+    char_label_lookup <- c(
+      scl_pct_nonwhite = "% Students of Color",
+      share_white = "% White Students",
+      share_black = "% Black Students",
+      share_hisp = "% Hispanic Students",
+      share_asian = "% Asian Students",
+      share_other = "% Other Race Students",
+      share_frl_eligible = "% Free/Reduced Lunch",
+      student_teacher_ratio = "Student-Teacher Ratio"
+    )
+    
+    if (input$city == "Charlotte") {
+      df <- char_data()
+      x_col <- input$char_x_var
+      color_col <- if (input$char_color_var == "x") x_col else input$char_color_var
+      
+      plot_data <- df |>
+        filter(!is.na(.data[[x_col]]), !is.na(.data[[color_col]]), !is.na(median_gross_rent)) |>
+        mutate(tooltip_label = paste0(
+          school_name, "<br>",
+          char_label_lookup[[x_col]], ": ", round(.data[[x_col]], 1), "%<br>",
+          char_label_lookup[[color_col]], ": ", round(.data[[color_col]], 1),
+          if (!grepl("ratio", color_col)) "%" else "", "<br>",
+          "Rent: $", round(median_gross_rent)
+        ))
+      
+      p <- ggplot(plot_data, aes(
+        x = .data[[x_col]],
+        y = median_gross_rent,
+        color = .data[[color_col]],
+        text = tooltip_label
+      )) +
+        geom_point(size = 3, alpha = 0.85) +
+        scale_color_viridis_c(
+          name = char_label_lookup[[color_col]],
+          option = "D", direction = -1,
+          labels = if (!grepl("ratio", color_col)) label_number(suffix = "%", accuracy = 1) else waiver()
+        ) +
+        scale_x_continuous(limits = c(0, 100), labels = label_number(suffix = "%", accuracy = 1)) +
+        scale_y_continuous(labels = dollar_format()) +
+        labs(
+          title = "Charlotte: School Demographics vs. Neighborhood Rent",
+          x = char_label_lookup[[x_col]],
+          y = "Median Gross Rent ($)"
+        ) +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 12, face = "bold"), legend.position = "top")
+      
+      ggplotly(p, tooltip = "text")
+      
+    } else {
+      x_col <- input$x_var
+      y_col <- input$y_var
+      color_col <- if (input$color_var == "x") x_col else input$color_var
+      
+      label_lookup <- c(
+        PoC_prop = "% People of Color in Tract",
+        rent_prop = "% Renter Households",
+        mean_HHInc = "Mean Household Income",
+        pov_rate = "Poverty Rate",
+        scl_pct_students_of_color = "% Students of Color",
+        pct_asian = "% Asian Students",
+        pct_black = "% Black Students",
+        pct_hispanic = "% Hispanic Students",
+        pct_multiracial = "% Multiracial Students",
+        pct_native = "% Native American Students",
+        pct_pacific = "% Pacific Islander Students",
+        pct_white = "% White Students",
+        pct_ell = "% English Language Learners",
+        pct_low_income = "% Low-Income Students",
+        pct_disabilities = "% Students with Disabilities",
+        pct_hcapable = "% Highly Capable Students"
+      )
+      
+      plot_data <- enrollment_with_tracts |>
+        filter(!is.na(.data[[x_col]]), !is.na(.data[[y_col]])) |>
+        mutate(tooltip = paste0(
+          "School: ", SchoolName,
+          "<br>", label_lookup[[x_col]], ": ", 
+          round(.data[[x_col]] * ifelse(grepl("prop|pov_rate", x_col), 100, 1), 1),
+          if (grepl("prop|pct|pov_rate", x_col)) "%" else "",
+          "<br>", label_lookup[[y_col]], ": ", round(.data[[y_col]], 1), "%",
+          if (color_col != x_col) paste0(
+            "<br>", label_lookup[[color_col]], ": ",
+            round(.data[[color_col]] * ifelse(grepl("prop|pov_rate", color_col), 100, 1), 1),
+            if (grepl("prop|pct|pov_rate", color_col)) "%" else ""
+          ) else ""
+        ))
+      
+      x_scale <- if (grepl("prop|pov_rate", x_col)) {
+        scale_x_continuous(labels = label_percent(accuracy = 1), limits = c(0, 1))
+      } else if (grepl("HHInc|rent", x_col)) {
+        scale_x_continuous(labels = dollar_format())
+      } else {
+        scale_x_continuous(labels = comma_format())
+      }
+      
+      y_scale <- scale_y_continuous(limits = c(0, 100), labels = label_number(suffix = "%"))
+      
+      p <- ggplot(plot_data, aes(
+        x = .data[[x_col]],
+        y = .data[[y_col]],
+        color = .data[[color_col]],
+        text = tooltip
+      )) +
+        geom_point(size = 3.5, alpha = 0.85) +
+        scale_color_viridis_c(
+          option = "D",
+          direction = -1,
+          name = label_lookup[[color_col]],
+          labels = if (grepl("prop|pov_rate", color_col)) label_percent(accuracy = 1)
+          else if (grepl("HHInc|rent", color_col)) dollar_format()
+          else label_number(suffix = "%")
+        ) +
+        labs(
+          title = "Seattle: School Demographics vs. Tract Characteristics",
+          x = label_lookup[[x_col]],
+          y = label_lookup[[y_col]]
+        ) +
+        x_scale +
+        y_scale +
+        theme_minimal() +
+        theme(plot.title = element_text(size = 12, face = "bold"), legend.position = "top")
+      
+      ggplotly(p, tooltip = "text")
+    }
+  })
+}
+
+# Run App
+shinyApp(ui, server)
 
