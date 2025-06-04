@@ -13,6 +13,11 @@
     <p><strong>Authors:</strong> Allie, Wandi, Sara</p>
   </header>
 
+<!-- Hamburger Button -->
+<button class="menu-toggle" onclick="toggleSidebar()">☰ Menu</button>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
   <nav>
     <a href="#abstract">Abstract</a>
     <a href="#introduction">Introduction</a>
@@ -21,6 +26,8 @@
     <a href="#discussion">Discussion</a>
     <a href="#visuals">Interactive Visuals</a>
   </nav>
+</aside>
+
 
   <section id="abstract">
     <h2>Abstract</h2>
@@ -168,15 +175,20 @@ When comparing school demographics to the racial composition of their surroundin
   </section>
 
   <section id="visuals">
-    <h2>Interactive Visuals</h2>
+    <h2 id="visuals">Interactive Visuals</h2>
+  
+    <h3>Explore the Data</h3>
+    
+  
     <iframe 
       src="https://alliecodes.shinyapps.io/DesegregationApp/"
       width="100%" 
-      height="700" 
+      height="1200" 
       style="border: none;">
       Your browser does not support iframes.
     </iframe>
   </section>
+  
 
   <footer>
     &copy; Allie, Wandi, and Sara
