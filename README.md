@@ -1,6 +1,6 @@
 # DesegregatingSchools_Seattle
 
-This project replicates and extends the Urban Institute’s analysis of school and housing segregation by comparing Charlotte, NC, and Seattle, WA. We examine whether public school racial demographics align with neighborhood characteristics like rent levels, poverty rates, and racial composition.
+This project replicates and extends [the Urban Institute’s analysis](https://housingmatters.urban.org/feature/school-housing-partnership-desegregate-communities) of school and housing segregation by comparing Charlotte, NC, and Seattle, WA. We examine whether public school racial demographics align with neighborhood characteristics like rent levels, poverty rates, and racial composition.
 
 Our website: [https://wxndin22.github.io/DesegregatingSchools_Seattle/](https://wxndin22.github.io/DesegregatingSchools_Seattle/)
 
