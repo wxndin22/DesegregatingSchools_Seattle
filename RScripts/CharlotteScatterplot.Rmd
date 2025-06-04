@@ -1,0 +1,86 @@
+---
+title: "Charlotte Scatter Plot"
+author: "Allie Miller"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r}
+#load Libraries
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(plotly)
+library(scales)
+
+#load the Data
+school_data <- read_csv("schools_level_data (1).csv")
+school_race <- read_csv("school_race_data (1).csv")
+
+#join race data to school data
+school_data <- school_data |>
+  left_join(school_race, by = "ncessch") |>
+  mutate(scl_pct_students_of_color = 100 - share_white)
+
+#data with rent info
+with_rent <- school_data |>
+  filter(!is.na(median_gross_rent), !is.na(scl_pct_students_of_color)) |>
+  mutate(tooltip_label = paste0(
+    school_name, "<br>",
+    "Students of color: ", round(scl_pct_students_of_color), "%<br>",
+    "Median rent: $", round(median_gross_rent), "<br>",
+    "Public school share: ", round(market_share_total * 100), "%"
+  ))
+
+#data without rent info
+missing_rent <- school_data |>
+  filter(is.na(median_gross_rent)) |>
+  mutate(
+    median_gross_rent = 500,  
+    tooltip_label = paste0(school_name, "<br>", "Housing data not available<br>",
+                           "Public school share: ", round(market_share_total * 100), "%")
+  )
+
+#combine both
+plot_data <- bind_rows(with_rent, missing_rent)
+
+#create Plot
+p <- ggplot(plot_data, aes(
+  x = scl_pct_students_of_color,
+  y = median_gross_rent,
+  color = scl_pct_students_of_color,
+  text = tooltip_label
+)) +
+  geom_point(size = 3, alpha = 0.85) +
+  scale_color_gradient(
+    low = "#a6cee3", high = "#08306b",
+    name = "Students of Color (%)"
+  ) +
+  scale_x_continuous(
+  limits = c(20, 100),
+  breaks = seq(20, 100, 10),
+  labels = function(x) paste0(x, "%")
+) +
+scale_y_continuous(
+  limits = c(400, 3200),
+  breaks = seq(400, 3200, 200),
+  labels = dollar_format(prefix = "$")
+) +
+  labs(
+    title = "Charlotte Schools’ Share of Students of Color by Median Rent",
+    x = "% Students of Color",
+    y = "Median Gross Rent ($)") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 10, face = "bold"),
+    legend.position = "top"
+  )
+
+# Interactive plot
+ggplotly(p, tooltip = "text")
+
+
+```
+
+...
+
