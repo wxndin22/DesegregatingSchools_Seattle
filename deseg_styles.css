@@ -33,7 +33,6 @@ body {
   }
   
   nav a {
-    margin: 8px 16px;
     text-decoration: none;
     color: #1e293b;
     font-weight: 600;
@@ -90,3 +89,129 @@ body {
     border-top: 1px solid #cbd5e1;
   }
   
+  /* === Dropdown nav styling === */
+  .dropdown {
+    position: relative;
+    margin: 0 12px;
+  }
+  
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f5f9;
+    min-width: 200px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 1;
+    border-radius: 6px;
+    padding: 8px 0;
+    top: 100%;
+    left: 0;
+  }
+  
+  .dropdown-content a {
+    color: #1e293b;
+    padding: 10px 16px;
+    text-decoration: none;
+    display: block;
+    font-size: 0.95em;
+  }
+  
+  .dropdown-content a:hover {
+    background-color: #e2e8f0;
+    color: #2563eb;
+  }
+  
+  .dropdown:hover .dropdown-content {
+    display: block;
+  }
+  
+  .menu-toggle {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background-color: #1e293b;
+    color: white;
+    border: none;
+    font-size: 1em;
+    padding: 8px 14px;
+    cursor: pointer;
+    z-index: 1001;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+  
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -250px;
+    width: 230px;
+    height: 100vh;
+    background-color: #f8fafc;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+    padding-top: 80px;
+    padding-left: 20px;
+    padding-right: 10px;
+    transition: left 0.3s ease;
+    z-index: 1000;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    overflow-y: auto;
+  }
+  
+  .sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0 0 20px 0;
+    background: transparent; 
+    border: none;            
+    box-shadow: none;
+  }
+  
+  
+  
+  .sidebar nav a {
+    color: #1e293b;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1em;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  
+  .sidebar nav a:hover {
+    background-color: #e2e8f0;
+    color: #2563eb;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+  
+  .sidebar {
+    backdrop-filter: blur(8px);
+    background-color: rgba(248, 250, 252, 0.95); /* softened */
+  }
+  
+  .sidebar nav a.subsection {
+    font-weight: 400;
+    font-size: 0.95em;
+    padding-left: 24px;
+    color: #475569;
+    border: none;
+  }
+  
+  .sub-section-links a {
+    display: block;
+    padding-left: 20px;
+    font-size: 0.95em;
+    color: #475569;
+    margin-top: 4px;
+  }
+
+  .sub-section-links a:hover {
+    color: #2563eb;
+    text-decoration: underline;
+  }
