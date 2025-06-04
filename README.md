@@ -6,7 +6,7 @@ Our website: [https://wxndin22.github.io/DesegregatingSchools_Seattle/](https://
 
 ---
 
-##Repository Structure
+## Repository Structure
 
 ### Main Files
 - `index.html` – Full project writeup and embedded visuals.
