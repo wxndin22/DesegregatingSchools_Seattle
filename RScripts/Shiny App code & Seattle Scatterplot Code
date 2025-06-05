@@ -84,7 +84,6 @@ ui <- navbarPage(
                         "% White" = "pct_white"
                       )),
                       selectInput("color_var", "Color By:", choices = c(
-                        "Same as X-Axis" = "x",
                         "% Highly Capable" = "pct_hcapable",
                         "% Low-Income" = "pct_low_income",
                         "% ELL" = "pct_ell",
@@ -118,24 +117,46 @@ ui <- navbarPage(
   
   # Charlotte Tab
   tabPanel("Charlotte",
-           h3("Charlotte: Median Rent vs School Demographics Interactive Scatterplot"),
-           sidebarLayout(
-             sidebarPanel(
-               selectInput("char_x_var", "X-Axis:", choices = c(
-                 "% Students of Color" = "scl_pct_nonwhite",
-                 "% White" = "share_white",
-                 "% Black" = "share_black",
-                 "% Hispanic" = "share_hisp",
-                 "% Asian" = "share_asian",
-                 "% Other" = "share_other"
-               )),
-               selectInput("char_color_var", "Color By:", choices = c(
-                 "Same as X-Axis" = "x",
-                 "% Free/Reduced Lunch" = "share_frl_eligible",
-                 "Student-Teacher Ratio" = "student_teacher_ratio"
-               ))
+           fluidPage(
+             h3("Charlotte: Median Rent vs School Demographics Interactive Scatterplot"),
+             fluidRow(
+               column(4,
+                      selectInput("char_x_var", "X-Axis:", choices = c(
+                        "% Students of Color" = "scl_pct_nonwhite",
+                        "% White" = "share_white",
+                        "% Black" = "share_black",
+                        "% Hispanic" = "share_hisp",
+                        "% Asian" = "share_asian",
+                        "% Other" = "share_other"
+                      )),
+                      selectInput("char_color_var", "Color By:", choices = c(
+                        "Same as X-Axis" = "x",
+                        "% Free/Reduced Lunch" = "share_frl_eligible",
+                        "Student-Teacher Ratio" = "student_teacher_ratio"
+                      ))
+               ),
+               column(8, plotlyOutput("charlottePlot"))
              ),
-             mainPanel(plotlyOutput("charlottePlot"))
+             
+             hr(),
+             
+             h3("Charlotte School Diversity and Neighborhood Maps"),
+             fluidRow(
+               column(4,
+                      selectInput("char_map", "Select Map to View:",
+                                  choices = c(
+                                    "Residents of Color" = "char_poc_map.png",
+                                    "Renter-Occupied Homes" = "char_rentocc_map.png"
+                                  ))
+               ),
+               column(8, uiOutput("charlotteMapImage"))
+             ),
+             br(),
+             p("Maps sourced from the Urban Institute: ",
+               a("School-Housing Partnership to Desegregate Communities",
+                 href = "https://housingmatters.urban.org/feature/school-housing-partnership-desegregate-communities",
+                 target = "_blank")
+             )
            )
   )
 )
@@ -283,8 +304,13 @@ server <- function(input, output, session) {
     filename <- paste0("sea_", input$grade_level, "_", input$seattle_var, ".PNG")
     list(src = filename, contentType = "image/png", width = "100%", alt = "Seattle Map")
   }, deleteFile = FALSE)
+  
+  # === Charlotte Map Image ===
+  output$charlotteMapImage <- renderUI({
+    req(input$char_map)
+    tags$img(src = input$char_map, width = "50%", alt = "Charlotte Neighborhood Map")
+  })
 }
-
 
 # Run App
 shinyApp(ui, server)
