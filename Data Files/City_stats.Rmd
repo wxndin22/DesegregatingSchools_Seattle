@@ -1,0 +1,146 @@
+---
+title: "City_stats"
+output: html_document
+date: "2025-05-14"
+---
+
+```{r}
+library(tidyverse)
+library(openintro)
+library(car)
+library(ggplot2)
+school_race_data <- read_csv("school_race_data.csv")
+race_kids_in_tract <- read_csv("raceeth_kids_in_tract.csv")
+tract_level_data <- read_csv("tract_level_data.csv")
+schools_level_data <- read_csv("schools_level_data.csv")
+charlotte_dem_data <- read_csv("CMSD_tract_2021.csv")
+enrollment_with_tracts <- read_csv("enrollmentWithTheTracts1.csv")
+```
+
+```{r}
+enrollment_with_tracts_stats <- enrollment_with_tracts |>
+  filter(CurrentSchoolType == "P")
+```
+
+
+```{r}
+#Seattle models
+enrollment_with_tracts_stats$scl_prop_students_of_color <- (enrollment_with_tracts_stats$scl_pct_students_of_color/100)
+
+plot(scl_prop_students_of_color~ PoC_prop, data=enrollment_with_tracts_stats)
+mod_sea_poc <- lm(scl_prop_students_of_color~ PoC_prop, data=enrollment_with_tracts_stats)
+summary(mod_sea_poc)
+qqPlot(resid(mod_sea_poc))
+plot(rstudent(mod_sea_poc) ~ mod_sea_poc$fitted)
+abline(h=0)
+abline(h = c(-3,-2,2,3), lty = "dashed", col = "red")
+enrollment_with_tracts_stats$cooks_poc <- cooks.distance(mod_sea_poc)
+max(enrollment_with_tracts_stats$cooks_poc)
+
+enrollment_with_tracts_stats$logmean_HHInc <- log(enrollment_with_tracts_stats$mean_HHInc)
+
+plot(scl_prop_students_of_color~ logmean_HHInc, data=enrollment_with_tracts_stats)
+mod_sea_income <- lm(scl_prop_students_of_color~ logmean_HHInc, data=enrollment_with_tracts_stats)
+summary(mod_sea_income)
+qqPlot(resid(mod_sea_income))
+plot(rstudent(mod_sea_income) ~ mod_sea_income$fitted)
+abline(h=0)
+abline(h = c(-3,-2,2,3), lty = "dashed", col = "red")
+enrollment_with_tracts$cooks_income <- cooks.distance(mod_sea_income)
+max(enrollment_with_tracts$cooks_income)
+
+plot(scl_prop_students_of_color~ pov_rate, data=enrollment_with_tracts_stats)
+mod_sea_pov <- lm(scl_prop_students_of_color~ pov_rate, data=enrollment_with_tracts_stats)
+summary(mod_sea_pov)
+qqPlot(resid(mod_sea_pov))
+plot(rstudent(mod_sea_pov) ~ mod_sea_pov$fitted)
+abline(h=0)
+abline(h = c(-3,-2,2,3), lty = "dashed", col = "red")
+enrollment_with_tracts$cooks_pov <- cooks.distance(mod_sea_pov)
+max(enrollment_with_tracts$cooks_pov)
+
+#Assumptions violated
+plot(scl_prop_students_of_color~ rent_prop, data=enrollment_with_tracts)
+mod_sea_renter <- lm(scl_prop_students_of_color~ rent_prop, data=enrollment_with_tracts)
+summary(mod_sea_renter)
+qqPlot(resid(mod_sea_renter))
+plot(rstudent(mod_sea_renter) ~ mod_sea_renter$fitted)
+abline(h=0)
+abline(h = c(-3,-2,2,3), lty = "dashed", col = "red")
+
+#Multiple regression
+mod_sea_all <- lm(scl_prop_students_of_color~ PoC_prop + pov_rate, data=enrollment_with_tracts)
+summary(mod_sea_all)
+qqPlot(resid(mod_sea_all))
+plot(rstudent(mod_sea_all) ~ mod_sea_all$fitted)
+abline(h=0)
+abline(h = c(-3,-2,2,3), lty = "dashed", col = "red")
+```
+
+
+```{r}
+#Charlotte data
+colnames(charlotte_dem_data)[1] <- "geoid"
+school_tract_data <- schools_level_data |>
+  left_join(school_race_data, by = "ncessch") |>
+  select(geoid, ncessch, school_name, school_age_kids_in_tract, tract_pct_nonwhite, scl_pct_nonwhite, median_gross_rent, median_owner_cost_mortgage, percent_renter_occupied, share_white, share_black, share_hisp, share_asian, share_other) |>
+  left_join(charlotte_dem_data, by = "geoid") |>
+  mutate(percent_nonwhite = (total_people - percent_white_nonhisp*total_people)/total_people) |>
+  mutate(scl_prop_nonwhite = scl_pct_nonwhite/100)
+```
+
+
+```{r}
+#Charlotte models
+school_tract_data$arcsinscl_prop_nonwhite <- asin(sqrt(school_tract_data$scl_prop_nonwhite))
+school_tract_data$arcsinpercent_nonwhite <- asin(sqrt(school_tract_data$percent_nonwhite))
+mod_color <- lm(arcsinscl_prop_nonwhite ~ percent_nonwhite, data= school_tract_data)
+summary(mod_color)
+qqPlot(resid(mod_color))
+plot(scl_pct_nonwhite ~ percent_nonwhite, data= school_tract_data)
+abline(48.143, 51.252, col="blue", lwd=2)
+plot(rstudent(mod_color) ~ mod_color$fitted)
+abline(h=0)
+abline(h = c(-3,-2,2,3), lty = "dashed", col = "red")
+```
+
+```{r}
+ggplot(school_tract_data, aes(y=arcsinscl_prop_nonwhite, x=percent_nonwhite))+
+  geom_point() +
+  labs(x="Proportion of People of Color in Charlotte Tracts", y="Arcsine-transformed Proportion of\nStudents of Color in Charlotte Schools") +
+  theme_classic()
+```
+
+
+```{r}
+plot(scl_pct_nonwhite ~ median_gross_rent.x, data= school_tract_data, ylim = c(0,100))
+mod_rent <- lm(scl_pct_nonwhite ~ median_gross_rent.x, data= school_tract_data)
+summary(mod_rent)
+qqPlot(resid(mod_rent))
+plot(rstudent(mod_rent) ~ mod_rent$fitted)
+abline(h=0)
+abline(h = c(-3,-2,2,3), lty = "dashed", col = "red")
+
+school_tract_data$logrent <- log(school_tract_data$median_gross_rent.x)
+school_tract_data$sqrtrent <- sqrt(school_tract_data$median_gross_rent.x)
+plot(scl_pct_nonwhite ~ sqrtrent, data= school_tract_data, ylim = c(0,100))
+mod_logrent <- lm(scl_pct_nonwhite ~ logrent, data= school_tract_data)
+summary(mod_logrent)
+qqPlot(resid(mod_logrent))
+plot(rstudent(mod_logrent) ~ mod_logrent$fitted)
+abline(h=0)
+abline(h = c(-3,-2,2,3), lty = "dashed", col = "red")
+```
+
+```{r}
+plot(scl_pct_nonwhite ~ percent_renter_occupied.x, data= school_tract_data, ylim = c(0,100))
+mod_renter <- lm(scl_pct_nonwhite ~ percent_renter_occupied.x, data= school_tract_data)
+summary(mod_renter)
+qqPlot(resid(mod_renter))
+plot(rstudent(mod_renter) ~ mod_renter$fitted)
+abline(h=0)
+abline(h = c(-3,-2,2,3), lty = "dashed", col = "red")
+```
+
+
+
