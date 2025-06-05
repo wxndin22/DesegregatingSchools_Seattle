@@ -31,7 +31,7 @@
 
   <section id="abstract">
     <h2>Abstract</h2>
-    <p>This project examines the relationship between racial diversity in public schools and neighborhood rent prices in two urban areas: Seattle, Washington and Charlotte, North Carolina. Inspired by the Urban Institute's analysis of Charlotte, NC, we replicated and extended their approach using newly sourced data for Seattle. Our primary objective was to determine whether the racial composition of public schools reflects the racial demographics of their surrounding neighborhoods, and how this relationship has evolved over time in both cities. Using a combination of public enrollment data, GIS Shapefiles, census tract data, and rental information, we created visualizations to analyze patterns of segregation and housing affordability at the neighborhood level. In particular, we map school diversity levels and surrounding rental costs to investigate spatial patterns and disparities. Both cities have complex histories with desegregation efforts: Charlotte is well-known for its 1970s busing initiatives that temporarily achieved national prominence as a success story of school integration, while Seattle pursued voluntary integration efforts in the same era, later facing legal and demographic challenges. In recent decades, both cities have experienced significant gentrification, raising concerns about re-segregation along racial and economic lines. Our project uses geospatial and statistical methods to create visualizations and summary statistics that explore these dynamics. Key findings include observable disparities in diversity and rent levels across neighborhoods, and correlations between racial composition and economic variables. They suggest that schools in higher-rent neighborhoods tend to have different racial compositions than those in lower-rent areas, highlighting persistent inequities. By comparing Seattle and Charlotte, we seek to better understand how historic and current housing patterns continue to shape educational access and diversity today.</p>
+    <p>This project examines the relationship between racial diversity in public schools and neighborhood demographics in two urban areas: Seattle, Washington and Charlotte, North Carolina. Inspired by the Urban Institute's analysis of Charlotte, NC, we replicated and extended their approach using newly sourced data for Seattle. Our primary objective was to determine whether the racial composition of public schools reflects the racial demographics of their surrounding neighborhoods, and how this relationship has evolved over time in both cities. Using a combination of public enrollment data, GIS Shapefiles, census tract data, and rental information, we created visualizations to analyze patterns of segregation and housing affordability at the neighborhood level. In particular, we map school diversity levels and surrounding proportion of rent households (or neighborhood demographics) to investigate spatial patterns and disparities. Both cities have complex histories with desegregation efforts: Charlotte is well-known for its 1970s busing initiatives that temporarily achieved national prominence as a success story of school integration, while Seattle pursued voluntary integration efforts in the same era, later facing legal and demographic challenges. In recent decades, both cities have experienced significant gentrification, raising concerns about re-segregation along racial and economic lines. Our project uses geospatial and statistical methods to create visualizations and summary statistics that explore these dynamics. Key findings include observable disparities in diversity and rent levels across neighborhoods, and correlations between racial composition and economic variables. These findings suggest that schools in higher income/poverty neighborhoods tend to have different racial compositions than those in lower income/poverty areas, highlighting persistent inequities. By comparing Seattle and Charlotte, we seek to better understand how historic and current housing patterns continue to shape educational access and diversity today.</p>
   </section>
 
   <section id="introduction">
@@ -52,11 +52,11 @@
 
     We reviewed the original Charlotte visualizations to reverse-engineer the necessary variables and began cleaning and restructuring the Seattle datasets accordingly. Initial cleaning errors - such as misaligned variables and formatting inconsistencies - were corrected to ensure comparability. The Charlotte data was structured with tract-level and school-level components (including socioeconomic indicators, racial demographics, housing information, and school characteristics), drawn from Urban Institute's Education Data Portal and U.S. Census data via the tigris package.</p>
 
-    For Seattle, we acquired school boundary shapefiles from Seattle Public Schools and additional demographic and housing datasets from King COunty and the American Community Survey (ACS 5-Year Estimates). We sourced median rent data from Seattle GIS via ArcGIS Open Data. However, aligning datasets posed multiple technical challenges: school demographic data lacked geographic coordinates, while rent data was neighborhood-based with inconsistent naming conventions. To resolve this, we geocoded school locations and standardized neighborhood names by cleaning, tokenizing, and lowercasing them. We filtered enrollment data to include only relevant rows from the Seattle School District No. 1. We retained entries for "All Grades," excluded aggregate rows (e.g., "District Total"), and specialized programs not tied to specific neighborhoods. We standarized school names by trimming whitespace and converting to lowercase to ensure consistency across datasets. We also manually renamed specific schools (e.g., "Edmonds S. Meany Middle School" to "Meany") to improve fuzzy matching.</p>
+    For Seattle, we acquired school boundary shapefiles from Seattle Public Schools and additional demographic and housing datasets from King County and the American Community Survey (ACS 5-Year Estimates). However, aligning datasets posed multiple technical challenges: school demographic data lacked geographic coordinates. To resolve this, we geocoded school locations and standardized neighborhood names by cleaning, tokenizing, and lowercasing them. We filtered enrollment data to include only relevant rows from the Seattle School District No. 1. We retained entries for "All Grades," excluded aggregate rows (e.g., "District Total"), and specialized programs not tied to specific neighborhoods. We standarized school names by trimming whitespace and converting to lowercase to ensure consistency across datasets. We also manually renamed specific schools (e.g., "Edmonds S. Meany Middle School" to "Meany") to improve fuzzy matching.</p>
 
     Fuzzy joins were central to our merging process, particularly where identifiers were inconsistent. Using regex_left_join() and name matching via slice(1), we resolved mismatches between school names and demographic data. We performed spatial joins in R to attach census tract GEOIDs to each Seattle school, allowing us to layer school-level data over tract-level demographic indicators. This spatial linkage enabled the comparison of school composition with surrounding neighborhood characteristics such as race, income, housing cost burden, and poverty rates.</p>
 
-    To visualize these relationships, we used R's spatial plotting tools, incorporating shapefiles and tract data for both cities. Challenges with dual-layer mapping were addressed using the ggnewscale package, which allowed for multiple color scales in the same plot. We used binned scales (10 evenly distributed bins) for consistency across visualizations and ensured accessibility through improved color palettes and map interactivity via Shiny.</p>
+    To visualize these relationships, we used R's spatial plotting tools, incorporating shapefiles and tract data for both cities. Challenges with dual-layer mapping were addressed using the ggnewscale package, which allowed for multiple color scales in the same plot. We ensured accessibility through improved color palettes and map interactivity via Shiny.</p>
 
     For statistical analysis, we employed linear and multiple regression to test the relationship between the proportion of students of color per school (n=91) and the predictor variables: proportion of people of color in tracts, mean household income in tracts, proportion of the population living below the 200% federal poverty level in tracts, and the proportion of renter households in tracts. Alternative school programs and specialty services were removed from the dataset. Due to the nature of the dataset, all models contained some observations with large residuals that could not be corrected for with transformations. Mean household income was log-transformed. No cases were found to have undue influence (Cook’s distance < 1). All analyses were performed in Program R 4.4.0.</p>
 
@@ -90,6 +90,7 @@
           <li>Percent Students of Color</li>
           <li>Median Rent</li>
       </ol>
+        
       <li>Fuzzily matched Seattle school names between datasets using approximate string matching (via stringdist package). We allowed for partial matches and retained the best match for each school.</li>
       <li>Loaded tract-level neighborhood data (e.g., racial composition, income, renter rates) and standardized school names in that dataset as well.</li>
       <li>Linked school data with tract data using fuzzy string matching (Jaro-Winkler distance via stringdist_left_join). We allowed for partial matches and retained the best match for each school.</li>
@@ -122,9 +123,9 @@
     <h2>Results</h2>
     <h3>Seattle Public Schools: Diversity Distribution</h3>
 
-    <h3>Seattle Rent vs. School Diversity</h3>
+    <h3>Charlotte Regression Data</h3>
     
-    <ul>The scatterplots reveal a notable correlation between the percentage of students of color in Seattle public schools and the median rent prices of their corresponding neighborhoods. Specifically, schools located in higher-rent areas tend to have a lower percentage of students of color, while those in lower-rent neighborhoods have a higher percentage. This suggests that economic factors, such as housing affordability, play a significant role in the racial composition of schools.
+    <ul>When comparing Charlotte students of color in schools vs people of color in tracts, we found that normality of residuals and constant variance could not be achieved using transformations.  Anecdotally, these two variables seem to have a positive relationship, but the data are too unevenly distributed to run regression.  All other Charlotte variables examined had these same problems, so we were unable to run regressions on those as well.
       </li>
     </ul>
 
@@ -144,12 +145,12 @@
       <li>Public housing tends to be located near schools with higher diversity, reinforcing spatial segregation.</li>
 <h4>Charlotte vs. Seattle</h4>
 <ul>
-      <li>Both cities show that neighborhood characteristics significantly affect school demographics.
+      <li>Both cities show that neighborhood characteristics affect school demographics.
       <li>Charlotte’s historic busing programs may have delayed resegregation compared to Seattle’s more fragmented efforts.</li>
 </ul>
 <h4>Correlation with Housing Costs</h4>
 <ul>
-    <ul>Similar to Seattle, there is a discernible relationship between neighborhood rent prices and school demographics in Charlotte. Schools in higher-rent areas tend to have a lower percentage of students of color, whereas those in more affordable neighborhoods have higher percentages. This pattern reflects the broader socioeconomic divides within the city.</em></ul>
+    <ul>Similar to Seattle, there is a discernible relationship between neighborhood demographics and school demographics in Charlotte. Schools in higher income/poverty areas tend to have a lower percentage of students of color, whereas those in more affordable neighborhoods have higher percentages. This pattern reflects the broader socioeconomic divides within the city.</em></ul>
 </ul>
     
 <h4>Spatial Patterns of Segregation</h4>
@@ -166,19 +167,19 @@
     
  <h4>School Diversity vs. Neighborhood Rent</h4>
   <ul>  
-      <li>A negative correlation is evident: as neighborhood rent increases, the percentage of students of color tends to decrease.</li>
-      <li>Schools in high-rent tracts (e.g., Capitol Hill, Queen Anne) tend to be less diverse.</li>
+      <li>A negative correlation is evident: as neighborhood affordability increases, the percentage of students of color tends to decrease.</li>
+      <li>Schools in higher household income tracts (e.g., Capitol Hill, Queen Anne) tend to be less diverse.</li>
   </ul>
     
  <h4>Geographic Maps</h4>
  <ul>
-      <li>Tracts in North Seattle: higher median rents, fewer residents of color.</li>
-      <li>South Seattle: more residents of color, lower median rents.</li>
+      <li>Tracts in North Seattle: higher household income, fewer residents of color.</li>
+      <li>South Seattle: more residents of color, lower household income.</li>
       <li>School diversity maps reflect these trends, suggesting a connection between housing affordability and school demographics.</li>
  </ul>
  <h4>Spatial Distribution of Diversity</h4>
  <ul>
-      <li>The maps indicate that schools with higher percentages of students of color are predominantly situated in the southern regions of Seattle, such as Rainier Valley and Beacon Hill. Conversely, northern neighborhoods like Ballard and Queen Anne, which have higher rent prices, host schools with a lower percentage of students of color. This spatial pattern underscores the impact of housing costs on school demographics.</li>
+      <li>The maps indicate that schools with higher percentages of students of color are predominantly situated in the southern regions of Seattle, such as Rainier Valley and Beacon Hill. Conversely, northern neighborhoods like Ballard and Queen Anne, which have higher household income, host schools with a lower percentage of students of color. This spatial pattern underscores the impact of housing affordability on school demographics.</li>
 <h4>Comparison with Neighborhood Demographics</h4>
 <ul>
 <li>When comparing school demographics to the racial composition of their surrounding census tracts, there is a general alignment, suggesting that schools reflect their immediate neighborhoods. However, some discrepancies exist, indicating potential factors such as school choice policies or district zoning that may influence enrollment patterns beyond residential proximity.</li>
@@ -212,23 +213,33 @@ Several multiple regression models, including some with interaction terms, did n
     <h2>Discussion</h2>
     <ul>
 <h3>Summary of Key Findings</h3>
-      <li><strong>Consistent Patterns Across Cities:</strong>Both Seattle and Charlotte display a consistent inverse relationship between neighborhood rent levels and school diversity.</li>
       <li><strong>Historical Context Matters:</strong> Historical policies, such as redlining in Seattle and busing in Charlotte, have long-term effects on current segregation patterns.</li>
       <li><strong>Gentrification's Role:</strong> Recent gentrification trends contribute to the displacement of communities of color, affecting school demographics and exacerbating educational inequalities.</li>
       <li><strong>Policy Implications:</strong> Addressing school segregation requires integrated housing and education policies that consider both economic and racial factors to ensure equitable access to quality education.</li>
 </ul>
-      <li>Address research questions:
+      <li>Here’s some questions our visuals aim to address:
         <ul>
-          <li>Is there a relationship between rent levels and school diversity?</li>
+          <li>Do schools with more students of color tend to be located in neighborhoods with more people of color?</li>
+          <li>Are higher-poverty neighborhoods linked to schools with higher percentages of low-income students?</li>
+          <li>Is there a mismatch between the neighborhood racial composition and the racial makeup of local schools?</li>
+          <li>Do schools serving more students of color tend to be in renter-heavy or lower-income neighborhoods?</li>
+          <li>Are schools in wealthier (high-income) tracts more likely to have fewer students of color?</li>
         </ul>
       </li>
       <li>Discuss potential mechanisms (e.g. housing affordability, zoning, historic segregation)</li>
-      <li>Address limitations:
+      <li>Limitations for Scatterplots:
         <ul>
-          <li>Missing/Incomplete rent data</li>
-          <li>Year mismatches between datasets</li>
-          <li>Census tracts as approximations of neighborhoods</li>
+          <li><strong>Correlation ≠ Causation</strong> Scatterplots show associations, not causal relationships.
+For example, even if high-poverty tracts are linked to schools with more students of color, it doesn't prove one causes the other.</li>
+          <li><strong>Static Snapshots in Time</strong> Data is based on a imited time range, so it doesn’t capture trends over time.
+Segregation and neighborhood demographics are dynamic my scatterplot  can’t show how things are changing.</li>
+          <li><strong>Use Fuzzy Matching</strong> Using fuzzy matching between school names and census tracts. This can introduce matching errors, especially in cities with multiple schools of similar names.</li>
+          <li><strong>Tract-Level Neighborhoods Don’t Reflect School Boundaries</strong> Just because a school is in a tract doesn't mean it serves only that tract. School catchment zones can cross tracts, so neighborhood data may only approximate school context.</li>
+          <li><strong>Missing Data or Incomplete Metrics</strong> Not all schools or neighborhoods may have complete data, some schools are excluded due to missing values. Some important variables (e.g., housing quality, gentrification, school funding) are not included.</li>
+          <li><strong>No Multivariate Control</strong>Each plot compares only 2–3 variables at a time. Real-world inequality is influenced by multiple intersecting factors — my plots simplify complex dynamics.</li>
+          <li><strong>Charlotte vs. Seattle Data Differences</strong>The variables for Charlotte and Seattle come from different datasets and sources, and aren’t very methodologically aligned. That limits the comparability between cities.</li>
         </ul>
+      <li>Limitations for Maps:</li>
       </li>
     </ul>
   </section>
