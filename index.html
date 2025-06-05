@@ -183,7 +183,8 @@
 <h4>Comparison with Neighborhood Demographics</h4>
 <ul>
 <li>When comparing school demographics to the racial composition of their surrounding census tracts, there is a general alignment, suggesting that schools reflect their immediate neighborhoods. However, some discrepancies exist, indicating potential factors such as school choice policies or district zoning that may influence enrollment patterns beyond residential proximity.</li>
-
+</ul>
+   
 <h4>Statistical Analysis - Seattle</h4>
   <ul>The proportion of people of color in tracts was positively related to the proportion of students of color per school (n = 91, r2 = 0.652, p < 0.0001), such that
 
@@ -206,8 +207,6 @@ where 𝑆̂ is the predicted proportion of students of color, P is the proporti
 Residuals of proportion of renter households were not normally distributed and normality was not achieved using transformations. We can conclude that there is not a clear relationship between the proportion of students of color and the proportion of renter households.
 
 Several multiple regression models, including some with interaction terms, did not yield a better model than the simple linear regression models due to lack of significance in adding additional variables and possible overfitting.</ul>
-    
-  </section>
 
   <section id="discussion">
     <h2>Discussion</h2>
@@ -216,7 +215,10 @@ Several multiple regression models, including some with interaction terms, did n
       <li><strong>Historical Context Matters:</strong> Historical policies, such as redlining in Seattle and busing in Charlotte, have long-term effects on current segregation patterns.</li>
       <li><strong>Gentrification's Role:</strong> Recent gentrification trends contribute to the displacement of communities of color, affecting school demographics and exacerbating educational inequalities.</li>
       <li><strong>Policy Implications:</strong> Addressing school segregation requires integrated housing and education policies that consider both economic and racial factors to ensure equitable access to quality education.</li>
-</ul>
+      <li><strong>Strong Racial Correlation:</strong> There is a strong positive relationship between the proportion of students of color in Seattle public schools and the proportion of residents of color in the surrounding census tracts (r² = 0.652, p < 0.0001). This suggests that neighborhood racial composition significantly predicts school-level racial diversity.
+      </li> <li><strong>Income and Diversity:</strong> A significant negative relationship was found between mean household income (log-transformed) and the proportion of students of color (r² = 0.500, p < 0.0001). Schools in lower-income neighborhoods tend to enroll higher proportions of students of color.
+      </li> <li><strong>Poverty and School Demographics:</strong> The proportion of the population living below 200% of the federal poverty level was also negatively related to school diversity (r² = 0.561, p < 0.0001). Higher poverty levels in a neighborhood are associated with a higher percentage of students of color in local schools.
+      </li> <li><strong>Renter Population:</strong> No clear or significant relationship was found between the proportion of renter households and the racial composition of schools. Attempts to normalize residuals through transformation were unsuccessful, indicating model limitations.</li> </ul>
   <h3>Here’s some questions our visuals aim to address:</h3>
         <ul>
           <li>Do schools with more students of color tend to be located in neighborhoods with more people of color?</li>
@@ -235,8 +237,8 @@ Segregation and neighborhood demographics are dynamic my scatterplot  can’t sh
           <li><strong>Use Fuzzy Matching</strong> Using fuzzy matching between school names and census tracts. This can introduce matching errors, especially in cities with multiple schools of similar names.</li>
           <li><strong>Tract-Level Neighborhoods Don’t Reflect School Boundaries</strong> Just because a school is in a tract doesn't mean it serves only that tract. School catchment zones can cross tracts, so neighborhood data may only approximate school context.</li>
           <li><strong>Missing Data or Incomplete Metrics</strong> Not all schools or neighborhoods may have complete data, some schools are excluded due to missing values. Some important variables (e.g., housing quality, gentrification, school funding) are not included.</li>
-          <li><strong>No Multivariate Control</strong>Each plot compares only 2–3 variables at a time. Real-world inequality is influenced by multiple intersecting factors — my plots simplify complex dynamics.</li>
-          <li><strong>Charlotte vs. Seattle Data Differences</strong>The variables for Charlotte and Seattle come from different datasets and sources, and aren’t very methodologically aligned. That limits the comparability between cities.</li>
+          <li><strong>No Multivariate Control</strong> Each plot compares only 2–3 variables at a time. Real-world inequality is influenced by multiple intersecting factors — my plots simplify complex dynamics.</li>
+          <li><strong>Charlotte vs. Seattle Data Differences</strong> The variables for Charlotte and Seattle come from different datasets and sources, and aren’t very methodologically aligned. That limits the comparability between cities.</li>
         </ul>
       <li>Limitations for Maps:</li>
       </li>
