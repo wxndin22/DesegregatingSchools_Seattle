@@ -81,15 +81,26 @@
     <h3>Data Cleaning and Preparation</h3>
     <ul>
       <li>Manually cleaned and merged Seattle datasets across enrollment, location, and neighborhood data.</li>
-      <li>Created a ‘Neighborhood’ column for Seattle schools by joining spatial coordinates with tract-level shapefiles.</li>
-      <li>Recreated Charlotte visualizations from provided datasets.</li>
+      <li>Filtered enrollment data to include only relevant rows from the Seattle School District No. 1. We retained entries for “All Grades”, excluded aggregate rows (e.g., “District Total”), and specialized programs not tied to specific neighborhoods.</li>
+      <li>Standardized school names by trimming whitespace and converting to lowercase to ensure consistency across datasets. We also manually renamed specific schools (e.g., “Edmonds S. Meany Middle School” to “Meany”) to improve fuzzy matching.</li>
+      
       <li>Standardized measures across cities for comparability:
       <ol>
           <li>Percent Students of Color</li>
           <li>Median Rent</li>
       </ol>
-      <li>Fuzzily matched Seattle school names between datasets using approximate string matching (via stringdist package).</li>
+      <li>Fuzzily matched Seattle school names between datasets using approximate string matching (via stringdist package). We allowed for partial matches and retained the best match for each school.</li>
+      <li>Loaded tract-level neighborhood data (e.g., racial composition, income, renter rates) and standardized school names in that dataset as well.</li>
+      <li>Linked school data with tract data using fuzzy string matching (Jaro-Winkler distance via stringdist_left_join). We allowed for partial matches and retained the best match for each school.</li>
       <li>Merged census tract shapefiles with demographic and rent data by ‘GEOID’.</li>
+      <li>Calculated new demographic variables for each school, including:
+          <li>Percentage of students by racial/ethnic group (Asian, Black, Hispanic, Multiracial, Native American, Pacific Islander, White)</li>
+          <li>Overall percentage of students of color</li>
+          <li>Percentage of English Language Learners</li>
+          <li>Percentage of low-income students</li>
+          <li>Percentage of students with disabilities</li>
+          <li>Percentage of highly capable students</li>
+    </li>
     </ul>
 
     <h3>Statistical and Spatial Mapping Methods</h3>
