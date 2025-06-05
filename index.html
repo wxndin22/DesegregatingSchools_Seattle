@@ -36,14 +36,14 @@
 
   <section id="introduction">
     <h2>Introduction</h2>
-    <p>Urban school systems in the United States have been long shaped by patterns of racial segregation and economic inequality. This project investigates how racial diversity in public schools relates to neighborhood rent prices in Seattle, Washington and Charlotte, North Carolina— two cities with distinct but comparable histories of integration efforts and subsequent gentrification. Our study aims to visualize and analyze whether school-level diversity correlates with local housing affordability, and how spatial patterns reveal the ongoing legacies of segregation.</p>
+    <p>Urban school systems in the United States have been long shaped by patterns of racial segregation and economic inequality. This project investigates how racial diversity in public schools relates to neighborhood income levels in Seattle, Washington and Charlotte, North Carolina— two cities with distinct but comparable histories of integration efforts and subsequent gentrification. Our study aims to visualize and analyze whether school-level diversity correlates with local housing affordability, and how spatial patterns reveal the ongoing legacies of segregation.</p>
     <p>Charlotte gained national attention in the 1970s as a model for successful school desegregation following the landmark Swann v. Charlotte-Mecklenburg Board of Education decision, which led to widespread busing to promote racial integration. However, court orders ended in the 1990s, and since then, Charlotte has witnessed significant resegregation alongside rapid urban development and housing displacement. Similarly, Seattle implemented voluntary integration programs beginning in the late 20th century, but has since grappled with persistent disparities and demographic shifts fueled by rising housing costs.</p>
     <p>Both cities are now experiencing profound gentrification, raising questions about how neighborhood changes affect school demographics. Our project focuses on two key research questions:</p>
     <ol>
-      <li>How does racial diversity in public schools vary in relation to neighborhood rent levels?</li>
+      <li>How does racial diversity in public schools vary in relation to neighborhood income levels?</li>
       <li>Are there spatial patterns of school segregation that correspond with economic changes in the surrounding areas?</li>
     </ol>
-    <p>By linking public school enrollment data, geographic shapefiles, and census tract rent data, we aim to create maps, scatterplots, and statistical summaries that illuminate these patterns. Our goal is to deepen understanding of how educational and housing inequalities are interconnected, and how urban transformation continues to impact opportunities for students of color.</p>
+    <p>By linking public school enrollment data, geographic shapefiles, and census tract household income data, we aim to create maps, scatterplots, and statistical summaries that illuminate these patterns. Our goal is to deepen understanding of how educational and housing inequalities are interconnected, and how urban transformation continues to impact opportunities for students of color.</p>
   </section>
 
   <section id="methods">
@@ -56,7 +56,7 @@
 
     Fuzzy joins were central to our merging process, particularly where identifiers were inconsistent. Using regex_left_join() and name matching via slice(1), we resolved mismatches between school names and demographic data. We performed spatial joins in R to attach census tract GEOIDs to each Seattle school, allowing us to layer school-level data over tract-level demographic indicators. This spatial linkage enabled the comparison of school composition with surrounding neighborhood characteristics such as race, income, housing cost burden, and poverty rates.</p>
 
-    To visualize these relationships, we used R's spatial plotting tools, incorporating shapefiles and tract data for both cities. Challenges with dual-layer mapping were addressed using the ggnewscale package, which allowed for multiple color scales in the same plot. We ensured accessibility through improved color palettes and map interactivity via Shiny.</p>
+    To visualize these relationships, we used R's spatial plotting tools, incorporating shapefiles and tract data for both cities. Challenges with dual-layer mapping were addressed using the 'ggnewscale' package, which allowed for multiple color scales in the same plot. We ensured accessibility through improved color palettes and map interactivity via Shiny.</p>
 
     For statistical analysis, we employed linear and multiple regression to test the relationship between the proportion of students of color per school (n=91) and the predictor variables: proportion of people of color in tracts, mean household income in tracts, proportion of the population living below the 200% federal poverty level in tracts, and the proportion of renter households in tracts. Alternative school programs and specialty services were removed from the dataset. Due to the nature of the dataset, all models contained some observations with large residuals that could not be corrected for with transformations. Mean household income was log-transformed. No cases were found to have undue influence (Cook’s distance < 1). All analyses were performed in Program R 4.4.0.</p>
 
@@ -84,12 +84,6 @@
       <li>Manually cleaned and merged Seattle datasets across enrollment, location, and neighborhood data.</li>
       <li>Filtered enrollment data to include only relevant rows from the Seattle School District No. 1. We retained entries for “All Grades”, excluded aggregate rows (e.g., “District Total”), and specialized programs not tied to specific neighborhoods.</li>
       <li>Standardized school names by trimming whitespace and converting to lowercase to ensure consistency across datasets. We also manually renamed specific schools (e.g., “Edmonds S. Meany Middle School” to “Meany”) to improve fuzzy matching.</li>
-      
-      <li>Standardized measures across cities for comparability:
-      <ol>
-          <li>Percent Students of Color</li>
-          <li>Median Rent</li>
-      </ol>
         
       <li>Fuzzily matched Seattle school names between datasets using approximate string matching (via stringdist package). We allowed for partial matches and retained the best match for each school.</li>
       <li>Loaded tract-level neighborhood data (e.g., racial composition, income, renter rates) and standardized school names in that dataset as well.</li>
@@ -125,7 +119,7 @@
 
     <h3>Charlotte Regression Data</h3>
     
-    <ul>When comparing Charlotte students of color in schools vs people of color in tracts, we found that normality of residuals and constant variance could not be achieved using transformations.  Anecdotally, these two variables seem to have a positive relationship, but the data are too unevenly distributed to run regression.  All other Charlotte variables examined had these same problems, so we were unable to run regressions on those as well.
+    <ul>When comparing Charlotte students of color in schools vs people of color in tracts, we found that normality of residuals and constant variance could not be achieved using transformations. Anecdotally, these two variables seem to have a positive relationship, but the data are too unevenly distributed to run regression. All other Charlotte variables examined had these same problems, so we were unable to run regressions on those as well.
       </li>
     </ul>
 
@@ -137,7 +131,7 @@
     
 <h4>Median Rent Map</h4>
 <ul>
-    <li>Some overlap between lower-rent areas and schools with higher percentages of students of color.</li>
+    <li>Some overlap between lower-income areas and schools with higher percentages of students of color.</li>
     <li>This suggests a spatial correlation between economic status and school demographics.</li>
 </ul>
     
@@ -230,15 +224,15 @@ Several multiple regression models, including some with interaction terms, did n
       </li>
       <h3>Limitations for Scatterplots:</h3>
         <ul>
-          <li><strong>Correlation ≠ Causation</strong> Scatterplots show associations, not causal relationships.
+          <li><strong>Correlation ≠ Causation:</strong> Scatterplots show associations, not causal relationships.
 For example, even if high-poverty tracts are linked to schools with more students of color, it doesn't prove one causes the other.</li>
-          <li><strong>Static Snapshots in Time</strong> Data is based on a imited time range, so it doesn’t capture trends over time.
+          <li><strong>Static Snapshots in Time:</strong> Data is based on a imited time range, so it doesn’t capture trends over time.
 Segregation and neighborhood demographics are dynamic my scatterplot  can’t show how things are changing.</li>
-          <li><strong>Use Fuzzy Matching</strong> Using fuzzy matching between school names and census tracts. This can introduce matching errors, especially in cities with multiple schools of similar names.</li>
-          <li><strong>Tract-Level Neighborhoods Don’t Reflect School Boundaries</strong> Just because a school is in a tract doesn't mean it serves only that tract. School catchment zones can cross tracts, so neighborhood data may only approximate school context.</li>
-          <li><strong>Missing Data or Incomplete Metrics</strong> Not all schools or neighborhoods may have complete data, some schools are excluded due to missing values. Some important variables (e.g., housing quality, gentrification, school funding) are not included.</li>
-          <li><strong>No Multivariate Control</strong> Each plot compares only 2–3 variables at a time. Real-world inequality is influenced by multiple intersecting factors — my plots simplify complex dynamics.</li>
-          <li><strong>Charlotte vs. Seattle Data Differences</strong> The variables for Charlotte and Seattle come from different datasets and sources, and aren’t very methodologically aligned. That limits the comparability between cities.</li>
+          <li><strong>Use Fuzzy Matching:</strong> Using fuzzy matching between school names and census tracts. This can introduce matching errors, especially in cities with multiple schools of similar names.</li>
+          <li><strong>Tract-Level Neighborhoods Don’t Reflect School Boundaries:</strong> Just because a school is in a tract doesn't mean it serves only that tract. School catchment zones can cross tracts, so neighborhood data may only approximate school context.</li>
+          <li><strong>Missing Data or Incomplete Metrics:</strong> Not all schools or neighborhoods may have complete data, some schools are excluded due to missing values. Some important variables (e.g., housing quality, gentrification, school funding) are not included.</li>
+          <li><strong>No Multivariate Control:</strong> Each plot compares only 2–3 variables at a time. Real-world inequality is influenced by multiple intersecting factors. Our plots simplify complex dynamics.</li>
+          <li><strong>Charlotte vs. Seattle Data Differences:</strong> The variables for Charlotte and Seattle come from different datasets and sources, and aren’t very methodologically aligned. That limits the comparability between cities.</li>
         </ul>
       <h3>Limitations for Maps:</h3>
     <li><strong>Data Outliers:</strong> Several models had observations with large residuals that could not be resolved through transformation, suggesting the presence of local anomalies in the dataset.</li> 
